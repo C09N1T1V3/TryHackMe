@@ -1,6 +1,7 @@
 # script for TryHackMe room Kaboom https://tryhackme.com/room/kaboom
 
 from pymodbus.client import ModbusTcpClient
+import sys 
 
 ip= sys.argv[1]
 
