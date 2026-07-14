@@ -1,7 +1,7 @@
 Forward Challenge – Offender vs Defender Perspective
 Initial Access
 ==============
-We already had initial access to the internal network. The next step was to identify which ports and services were open so that credentials could be used effectively. Blindly attempting logins wastes time and effort; proper network reconnaissance ensures we understand which targets are available to exploit or access. This allows us to direct our efforts in the right direction.
+We already had initial access to the internal network. The next step was to identify which ports and services were open so that credentials could be used effectively. Blindly attempting logins waste of time and effort; proper network reconnaissance ensures we understand which targets are available to exploit or access. This allows us to direct our efforts in the right direction.
 
 Defender perspective:  
 Security teams should actively monitor for port‑scanning and reconnaissance activity, as these are often the first indicators of an intrusion. Implement strict network segmentation and limit exposed services to reduce the attack surface. Early detection of scanning attempts can significantly hinder adversary progress.
@@ -35,6 +35,7 @@ nmap -sS -sC -sV -p 88,135,139,389,445,636,3389 10.130.187.188
 
 From the service fingerprint, we obtained details about the target domain name and confirmed the system was a Domain Controller.
 
+Defender perspective:
 Domain Controllers should not expose RDP to standard users. Access should be limited to privileged administrative accounts, and all RDP sessions should be logged and monitored. Service fingerprinting attempts should trigger alerts, as they indicate adversaries are mapping the environment for exploitation.
 
 <img width="550" height="179" alt="forward_0_nmap_service_enum2" src="https://github.com/user-attachments/assets/8cf63b88-a61b-49d3-a06c-8ef1839650c9" />
@@ -47,6 +48,7 @@ LLMNR/NBNS Poisoning
 SMB Session Hijacking
 Man‑in‑the‑Middle Data Manipulation
 
+Defender perspective:
 The enforcement of SMB signing is a strong defensive measure. Organizations should ensure this configuration is consistently applied across all systems. Regular audits of SMB settings help maintain integrity protections and prevent credential relay or traffic tampering.
 
 Initial Access (Abusing Administrative Protocols)
@@ -57,15 +59,18 @@ nxc smb 10.130.187.188 -u "ctf.local\j.smith" -p "JSmith@IT2024"
 
 <img width="557" height="131" alt="forward_0_nxc_check" src="https://github.com/user-attachments/assets/d4d79455-b03d-4c61-8da9-5eb7f185801b" />
 
-We logged into the target using credentials and confirmed that the j.smith account did not have administrator rights. Since no other login service was available, we used RDP.
+We logged into the target using credentials and confirmed that the j.smith account did not have administrator rights. Since no other login service was available, so we used RDP.
+```
 xfreerdp /v:10.130.187.188 /u:"ctf.local\j.smith" /p:"JSmith@IT2024"
-
+```
+Defender perspective:
 Restrict RDP access to non‑administrative accounts and enforce multi‑factor authentication for all remote logins. Monitor authentication attempts across SMB and RDP to detect misuse of valid but low‑privilege credentials.
 
 Host/Domain Enumeration
 =======================
-``` net user ```
-
+```
+net user
+```
 <img width="485" height="255" alt="forward_1_dc_users" src="https://github.com/user-attachments/assets/b17bf299-7813-4ea0-8356-c54f78491abd" />
 
 ```
@@ -75,8 +80,9 @@ net user j.smith
 
 <img width="440" height="310" alt="forward_1_dc_user_jsmith" src="https://github.com/user-attachments/assets/d4ab2dd2-c440-4bca-a049-e979f433503c" />
 
-As the target was a Domain Controller, local accounts were effectively domain accounts because the local SAM database is replaced with the ntds.dit database. The results were identical, and the domain name (e.g., ctf.local) was not required as a prefix. Group details confirmed why we were able to log in via RDP.
+As the target was a Domain Controller, local accounts were effectively domain accounts because the local SAM database is replaced with the NTDS.dit database. The results were identical, and the domain name (e.g., ctf.local) was not required as a prefix. Group details confirmed why we were able to log in via RDP.
 
+Defender perspective:
 Commands such as net user and net group should be monitored, as they are commonly used for enumeration. Group memberships must be regularly audited to ensure only authorized accounts have RDP privileges.
 
 **Directory Enumeration**
@@ -95,6 +101,7 @@ runas /user:t.jones cmd.exe
 ```
 We then checked these credentials against existing domain users. Logging in as t.jones revealed no special privileges; it was just a standard domain account.
 
+Defender perspective:
 Sensitive files like KeePass databases should not be stored in user directories. Monitor for access to password vault files.
 
 **Elevate Privilege – Password Spraying**
@@ -118,6 +125,7 @@ On the desktop, there was an automation notice in the r.williams folder.
 
 <img width="393" height="264" alt="forward_3_dc_user_rwilliams_auto_notice" src="https://github.com/user-attachments/assets/4b629311-f8cf-458b-affd-27ce3e300ae8" />
 
+Defender perspective:
 Implement account lockout policies and MFA to prevent password spraying. Audit privileged accounts like sysadmin. Monitor for suspicious automation files or scheduled tasks.
 
 **Kerberos Ticket Attempt (Informational)**
@@ -133,14 +141,16 @@ psexec.py ctf.local\svc.scanner@10.130.187.188 -k -no-pass -dc-ip 10.130.187.188
 
 We attempted to use a base64‑encoded Kerberos ticket for pass‑the‑ticket, but the ticket had already expired.
 
+Defender perspective:
 Short ticket lifetimes reduce replay risk. Monitor for unusual Kerberos ticket conversions and environment variable changes. Service accounts must be closely monitored, with credentials rotated regularly.
 
 **BloodHound Analysis**
 ======================== 
-We captured domain data using BloodHound and visualized the graph for granular control. Using r.williams as the center point, we navigated through different nodes. We discovered an Outbound Object Control where r.williams had AddAllowedToAct privileges over the Domain Controller.
+We captured Active Directory data using BloodHound and visualized the graph for granular control. Using r.williams as the center point, we navigated through different nodes. We discovered an Outbound Object Control where r.williams had **AddAllowedToAct** privileges over the Domain Controller.
 
 <img width="903" height="371" alt="forward_5_dc_rwilliams_allowdtoact" src="https://github.com/user-attachments/assets/e349d201-c905-468f-8ea7-964fa0050ece" />
 
+Defender perspective:
 Delegation rights should be audited frequently to identify and remove unnecessary privileges. Monitoring for suspicious computer account creation or modifications to delegation settings can help detect adversary activity.
 
 **Resource‑Based Constrained Delegation**
@@ -152,7 +162,10 @@ getST.py -spn 'cifs/DC01.ctf.local' -impersonate 'Administrator' 'ctf.local/DESK
 psexec.py ctf.local/Administrator@dc01.ctf.local -no-pass -k
 ```
 
+<img width="545" height="309" alt="forward_Administrator" src="https://github.com/user-attachments/assets/e921ac8a-ece6-4571-840a-bb50a2001436" />
+
 We used RBCD to impersonate the Administrator and gained full access to the Domain Controller.
 
+Defender perspective:
 Constrained delegation settings must be carefully reviewed and restricted to only essential accounts. Privilege escalation attempts involving delegation should be closely monitored. Applying least‑privilege principles and auditing delegation configurations can prevent adversaries from exploiting these mechanisms.
 
