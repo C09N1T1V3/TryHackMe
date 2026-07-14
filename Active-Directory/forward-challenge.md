@@ -38,10 +38,11 @@ From the service fingerprint, we obtained details about the target domain name a
 Defender perspective:
 Domain Controllers should not expose RDP to standard users. Access should be limited to privileged administrative accounts, and all RDP sessions should be logged and monitored. Service fingerprinting attempts should trigger alerts, as they indicate adversaries are mapping the environment for exploitation.
 
-<img width="550" height="179" alt="forward_0_nmap_service_enum2" src="https://github.com/user-attachments/assets/8cf63b88-a61b-49d3-a06c-8ef1839650c9" />
-
 **SMB Signing**
 ==================
+
+<img width="550" height="179" alt="forward_0_nmap_service_enum2" src="https://github.com/user-attachments/assets/8cf63b88-a61b-49d3-a06c-8ef1839650c9" />
+
 SMB signing was enabled and enforced, preventing attackers from exploiting:
 NTLM Relay Attacks (Man‑in‑the‑Middle)
 LLMNR/NBNS Poisoning
