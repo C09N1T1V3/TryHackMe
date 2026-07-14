@@ -1,0 +1,76 @@
+Internal Network Security Review
+We already observed that an attacker had initial access to the internal network.
+From a defensive standpoint, the next step is to monitor which ports and services are exposed. This helps us understand how credentials might be abused. Blind credential attempts waste time, but proper network reconnaissance reveals exploitable targets. Defenders should ensure that efforts are directed toward reducing exposure.
+
+🔍 Network Reconnaissance
+nmap -sS -p- 10.130.187.188
+
+Result:
+88 – Kerberos
+135, 139 – RPC
+389 – LDAP
+445 – SMB
+636 – LDAPSSL
+3389 – RDP
+👉 Defensive takeaway: These ports are high‑value targets. Restrict unnecessary exposure, enforce strong authentication, and monitor for unusual traffic.
+
+🛡️ Service Fingerprinting
+nmap -sS -sC -sV -p 88,135,139,389,445,636,3389 10.130.187.188
+
+The fingerprint revealed that the system was a Domain Controller.
+Normally, workstations don’t require RDP access — only privileged admin groups should have it.
+👉 Defensive takeaway: Disable RDP where not needed. Limit access strictly to administrative tiers.
+
+🚫 SMB Signing
+SMB signing was enabled and enforced. This is good practice because it prevents:
+NTLM Relay Attacks
+LLMNR/NBNS Poisoning
+SMB Session Hijacking
+Man‑in‑the‑Middle Data Manipulation
+👉 Defensive takeaway: Always enforce SMB signing to block these common lateral movement techniques.
+
+🔑 Initial Access (Administrative Protocols)
+Attackers attempted login with user j.smith.
+nxc smb 10.130.187.188 -u "ctf.local\j.smith" -p "JSmith@IT2024"
+xfreerdp /v:10.130.187.188 /u:"ctf.local\j.smith" /p:"JSmith@IT2024"
+
+The account had no admin rights.
+👉 Defensive takeaway: Monitor RDP logins. Ensure non‑admin accounts cannot log in remotely to sensitive systems.
+
+📂 Host/Domain Enumeration
+Attackers enumerated domain users and discovered files like Database.kdbx (KeePass password manager).
+👉 Defensive takeaway: Sensitive files should never be stored in user home directories. Apply file access controls and audit for password manager databases.
+
+⬆️ Privilege Escalation
+Password spraying attempts eventually revealed r.williams with elevated privileges.
+
+👉 Defensive takeaway:
+Implement account lockout policies.
+Monitor for password spraying attempts.
+Enforce MFA for privileged accounts.
+
+🧾 Kerberos Ticket Abuse
+Attackers tried pass‑the‑ticket with expired tickets.
+👉 Defensive takeaway: Regularly purge stale tickets and monitor for unusual Kerberos activity.
+
+
+🕸️ BloodHound Analysis
+Attackers mapped domain relationships and found Outbound Object Control where r.williams had AddAllowedToAct privilege over the Domain Controller.
+👉 Defensive takeaway:
+Audit delegation rights.
+Remove unnecessary AllowedToActOnBehalfOfOtherIdentity privileges.
+Monitor for resource‑based constrained delegation abuse.
+
+⚠️ Final Compromise
+Through Resource‑Based Constrained Delegation (RBCD), attackers impersonated the Administrator and gained full Domain Controller access.
+👉 Defensive takeaway:
+Regularly audit delegation and constrained delegation settings.
+Apply tiered admin models.
+Monitor for unusual computer account creation and delegation changes.
+
+✅ Defender’s Lessons
+Limit exposed services (especially RDP, SMB, LDAP, winrm, FTP).
+Enforce SMB signing and Kerberos hygiene.
+Audit domain delegation rights.
+Monitor for password spraying and privilege escalation attempts.
+Protect sensitive files (like KeePass databases) from being stored in user directories.
