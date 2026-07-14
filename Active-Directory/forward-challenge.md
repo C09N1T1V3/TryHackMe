@@ -112,8 +112,7 @@ Password spraying revealed valid credentials for r.williams.
 nxc smb 10.130.187.188 -u users.txt -p "redacted" --continue-on-success
 nxc rdp 10.130.187.188 -u users.txt -p "redacted" --continue-on-success
 ```
-
-<img width="947" height="245" alt="forward_3_dc_user_rwilliams_creds" src="https://github.com/user-attachments/assets/8f3e6676-8115-4d92-8b66-3c65539239e6" />
+<img width="947" height="245" alt="forward_3_dc_user_rwilliams_creds" src="https://github.com/user-attachments/assets/7da62167-6e87-4035-8108-608eede5a74b" />
 
 ```
 net user r.williams
