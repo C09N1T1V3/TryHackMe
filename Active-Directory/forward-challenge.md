@@ -8,8 +8,9 @@ Security teams should actively monitor for port‑scanning and reconnaissance ac
 
 **Network Recon**
 =================
+'''
 nmap -sS -p- 10.130.187.188
-
+'''
 <img width="557" height="351" alt="forward_0_nmap_port" src="https://github.com/user-attachments/assets/63d5e2e6-23b8-4e84-8aca-e77c53b20026" />
 
 Here we got some important ports:
@@ -25,7 +26,9 @@ These ports represent critical attack surfaces. Limit exposure of Kerberos, LDAP
 
 **Service Fingerprint**
 =====================
+'''
 nmap -sS -sC -sV -p 88,135,139,389,445,636,3389 10.130.187.188
+'''
 
 <img width="549" height="341" alt="forward_0_nmap_service_enum1" src="https://github.com/user-attachments/assets/d7d82d69-bd88-47eb-ab0c-d44b7f99cb22" />
 
@@ -47,7 +50,9 @@ The enforcement of SMB signing is a strong defensive measure. Organizations shou
 
 Initial Access (Abusing Administrative Protocols)
 ===============
+'''
 nxc smb 10.130.187.188 -u "ctf.local\j.smith" -p "JSmith@IT2024"
+'''
 
 <img width="557" height="131" alt="forward_0_nxc_check" src="https://github.com/user-attachments/assets/d4d79455-b03d-4c61-8da9-5eb7f185801b" />
 
