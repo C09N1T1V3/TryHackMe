@@ -43,7 +43,7 @@ This redirected to the user’s Gravatar profile.
 
 Step 5: Cracking the Base64
 ---------------------------
-The final piece was decoding the Base64 string. While the challenge described it as a “hash,” Base64 is actually an encoding scheme. 
+The final piece was decoding the Base64 string.
 
 Using either CyberChef or the Linux CLI, I decoded it:
 ```
